@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Viktorīna</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .question {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+        .options {
+            margin-bottom: 20px;
+        }
+        .options label {
+            display: block;
+            margin-bottom: 10px;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="quiz-container">
+        <div id="question" class="question"></div>
+        <div id="options" class="options"></div>
+        <button id="next-button">Nākamais jautājums</button>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                id: "start",
+                question: "Vai vēlies izmantot maģiju vai smagi sist?",
+                options: ["Maģiju", "Smagi sist", "Nevaru izvēlēties..."],
+                next: {
+                    "Maģiju": "magic",
+                    "Smagi sist": "melee",
+                    "Nevaru izvēlēties...": "cannot-choose"
+                }
+            },
+            {
+                id: "magic",
+                question: "Vai vēlies būt reliģiozs?",
+                options: ["Jā, ļoti!", "Varbūt vēlāk..."],
+                next: {
+                    "Jā, ļoti!": "cleric",
+                    "Varbūt vēlāk...": "sorcerer"
+                }
+            },
+            {
+                id: "melee",
+                question: "Tuvcīņa vai distancētā cīņa?",
+                options: ["Tuvcīņa", "Distancētā cīņa"],
+                next: {
+                    "Tuvcīņa": "melee-combat",
+                    "Distancētā cīņa": "ranged-combat"
+                }
+            },
+            {
+                id: "cannot-choose",
+                question: "Tu esi labs ar cilvēkiem?",
+                options: ["Jā! Cilvēki man patīk!", "Nē, esmu pārāk uz sevi vērsts."],
+                next: {
+                    "Jā! Cilvēki man patīk!": "good-with-people",
+                    "Nē, esmu pārāk uz sevi vērsts.": "self-centered"
+                }
+            },
+            {
+                id: "cleric",
+                question: "Vai vēlies dziedināt cīnītājus?",
+                options: ["Jā", "Nē, ne īsti"],
+                next: {
+                    "Jā": "cleric-result",
+                    "Nē, ne īsti": "druid-or-bard"
+                }
+            },
+            {
+                id: "sorcerer",
+                question: "Vai tevī ir iedzimta maģija?",
+                options: ["Jā, tā ir manās asinīs!", "Nē, es to apgūstu!"],
+                next: {
+                    "Jā, tā ir manās asinīs!": "sorcerer-result",
+                    "Nē, es to apgūstu!": "wizard-or-fighter"
+                }
+            },
+            {
+                id: "melee-combat",
+                question: "Vai cīnies par kādu mērķi?",
+                options: ["Jā. Es cīnos par taisnību!", "Nē. Man patīk lietas dauzīt."],
+                next: {
+                    "Jā. Es cīnos par taisnību!": "paladin-or-monk",
+                    "Nē. Man patīk lietas dauzīt.": "barbarian-or-fighter"
+                }
+            },
+            {
+                id: "ranged-combat",
+                question: "Vai tu esi veikls?",
+                options: ["Jā", "Nē"],
+                next: {
+                    "Jā": "ranger-result",
+                    "Nē": "fighter-result"
+                }
+            },
+            {
+                id: "druid-or-bard",
+                question: "Vai mīli dzīvniekus?",
+                options: ["Jā, viņi ir tik pūkaini!", "Nē, ne pārāk."],
+                next: {
+                    "Jā, viņi ir tik pūkaini!": "druid-result",
+                    "Nē, ne pārāk.": "bard-or-cleric"
+                }
+            },
+            {
+                id: "bard-or-cleric",
+                question: "Vai tu raksti dzeju saviem draugiem?",
+                options: ["Jā! Es rakstu dzeju un dziesmas!", "Nē"],
+                next: {
+                    "Jā! Es rakstu dzeju un dziesmas!": "bard-result",
+                    "Nē": "cleric-result"
+                }
+            },
+            {
+                id: "wizard-or-fighter",
+                question: "Vai mācies maģiju?",
+                options: ["Jā", "Nē, maģija ir mana būtība!"],
+                next: {
+                    "Jā": "wizard-result",
+                    "Nē, maģija ir mana būtība!": "sorcerer-result"
+                }
+            },
+            {
+                id: "paladin-or-monk",
+                question: "Zini, kā lietot ieročus?",
+                options: ["Jā", "Nē"],
+                next: {
+                    "Jā": "paladin-result",
+                    "Nē": "monk-result"
+                }
+            },
+            {
+                id: "barbarian-or-fighter",
+                question: "Vai esi dusmīgs?",
+                options: ["Jā", "Nē, es vienkārši gribu sist"],
+                next: {
+                    "Jā": "barbarian-result",
+                    "Nē, es vienkārši gribu sist": "fighter-result"
+                }
+            },
+            {
+                id: "good-with-people",
+                question: "Vai esi viltīgs?",
+                options: ["Jā", "Nē, ne ļoti."],
+                next: {
+                    "Jā": "rogue-result",
+                    "Nē, ne ļoti.": "ranger-result"
+                }
+            },
+            {
+                id: "self-centered",
+                question: "Jūsu raksturs ir: Kareivis (Fighter)",
+                options: [],
+                next: {}
+            },
+            {
+                id: "cleric-result",
+                question: "Jūsu raksturs ir: Priesteris (Cleric)",
+                options: [],
+                next: {}
+            },
+            {
+                id: "druid-result",
+                question: "Jūsu raksturs ir: Druīds (Druid)",
+                options: [],
+                next: {}
+            },
+            {
+                id: "bard-result",
+                question: "Jūsu raksturs ir: Bards (Bard)",
+                options: [],
+                next: {}
+            },
+            {
+                id: "wizard-result",
+                question: "Jūsu raksturs ir: Mags (Wizard)",
+                options: [],
+                next: {}
+            },
+            {
+                id: "sorcerer-result",
+                question: "Jūsu raksturs ir: Burvis (Sorcerer)",
+                options: [],
+                next: {}
+            },
+            {
+                id: "paladin-result",
+                question: "Jūsu raksturs ir: Paladins (Paladin)",
+                options: [],
+                next: {}
+            },
+            {
+                id: "monk-result",
+                question: "Jūsu raksturs ir: Mūks (Monk)",
+                options: [],
+                next: {}
+            },
+            {
+                id: "barbarian-result",
+                question: "Jūsu raksturs ir: Barbars (Barbarian)",
+                options: [],
+                next: {}
+            },
+            {
+                id: "rogue-result",
+                question: "Jūsu raksturs ir: Blēdis (Rogue)",
+                options: [],
+                next: {}
+            },
+            {
+                id: "ranger-result",
+                question: "Jūsu raksturs ir: Mežzinis (Ranger)",
+                options: [],
+                next: {}
+            },
+            {
+                id: "fighter-result",
+                question: "Jūsu raksturs ir: Kareivis (Fighter)",
+                options: [],
+                next: {}
+            }
+        ];
+
+        let currentQuestionId = "start";
+
+        function loadQuestion() {
+            const questionData = questions.find(q => q.id === currentQuestionId);
+            if (!questionData) return;
+
+            const questionElement = document.getElementById('question');
+            const optionsElement = document.getElementById('options');
+            const nextButton = document.getElementById('next-button');
+
+            questionElement.textContent = questionData.question;
+            optionsElement.innerHTML = '';
+
+            questionData.options.forEach(option => {
+                const optionElement = document.createElement('label');
+                const radioButton = document.createElement('input');
+                radioButton.type = 'radio';
+                radioButton.name = 'option';
+                radioButton.value = option;
+                radioButton.id = option;
+                optionElement.appendChild(radioButton);
+
+                const optionText = document.createTextNode(option);
+                optionElement.appendChild(optionText);
+
+                optionsElement.appendChild(optionElement);
+            });
+
+            nextButton.onclick = () => {
+                const selectedOption = document.querySelector('input[name="option"]:checked');
+                if (!selectedOption) {
+                    alert('Lūdzu, izvēlieties opciju.');
+                    return;
+                }
+
+                const selectedValue = selectedOption.value;
+                currentQuestionId = questionData.next[selectedValue] || 'start';
+                loadQuestion();
+            };
+        }
+
+        window.onload = loadQuestion;
+    </script>
+</body>
+</html>
